@@ -1,0 +1,50 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+develop-eggs/
+dist/
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# === Virtual Environment ===
+.venv/
+env/
+venv/
+ENV/
+
+# === Jupyter & IPython ===
+.ipynb_checkpoints/
+*.ipynb_meta.json
+
+# === Data Files ===
+data/*.csv
+data/*.xlsx
+data/*.txt
+data/*.json
+
+# (keep one example data file if you want)
+!data/README.md
+
+# === Logs and temporary files ===
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# === VSCode and PyCharm ===
+.vscode/
+.idea/
+
+# === OS ===
+.DS_Store
+desktop.ini
