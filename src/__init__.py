@@ -2,23 +2,29 @@
 This module imports common packages across modules
 
 """
-# src/__init__.py
 
-# Core data libraries
-import pandas as pd
+# Core external libraries
+import os
 import numpy as np
-
-# Visualization
-import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
-import plotly.express as px
+import matplotlib.pyplot as plt
 
-# Machine learning / modelling
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+# Internal module imports for convenience
+from . import (
+    utils,
+    data_loader,
+    preprocessing,
+    modelling,
+    evaluation,
+    evaluation_visuals,
+    visualise
+)
 
-# Set visualization defaults
-sns.set(style="whitegrid")
-plt.rcParams['figure.figsize'] = (10, 5)
+__all__ = [
+    # External packages
+    "os", "np", "pd", "sns", "plt",
+    # Internal modules
+    "utils", "data_loader", "preprocessing",
+    "modelling", "evaluation", "evaluation_visuals", "visualise"
+]

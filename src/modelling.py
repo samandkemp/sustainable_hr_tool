@@ -2,29 +2,81 @@
 This module will manage model training using featured computations
 
 """
-# src/modelling.py
-from . import LinearRegression, RandomForestRegressor, train_test_split, mean_squared_error, r2_score, pd, np
+from . import pd, np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import joblib
+from pathlib import Path
 
-def train_hr_model(df, target_col='heart_rate', feature_cols=None):
+# ---------------------------
+# Train Model
+# ---------------------------
+
+def fit_sustainable_hr_model(df: pd.DataFrame, features: list, target: str, model_file: str = None):
     """
-    Train a simple regression model to return a trained model object
+    Train a linear regression model to predict sustainable HR.
+
+    Inputs
+    ----------
+    df : pd.DataFrame (Preprocessed dataset)
+    features : list (Feature column names)
+    target : str Target (column name (e.g., 'avg_hr'))
+    model_file : str, optional (Path to save the trained model, joblib)
+    
+    Returns
+    -------
+    model : trained sklearn model
+    df_pred : pd.DataFrame (with pred. HR)
     """
-    if feature_cols is None:
-        feature_cols = [c for c in df.columns if c not in ['timestamp', target_col]]
+    df = df.copy()
     
-    X = df[feature_cols]
-    y = df[target_col]
-    
+    X = df[features]
+    y = df[target]
+
+    # Train-test split (optional for full dataset you could skip)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
+
     model = LinearRegression()
     model.fit(X_train, y_train)
-    
-    y_pred = model.predict(X_test)
-    mse = mean_squared_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-    print(f"Model trained. MSE={mse:.2f}, R2={r2:.2f}")
 
-    return model
+    # Predict for the full dataset
+    df["predicted_sustainable_hr"] = model.predict(X)
+
+    # Save model if path provided
+    if model_file:
+        Path(model_file).parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, model_file)
+
+    return model, df
+
+# ---------------------------
+# Predict New Data
+# ---------------------------
+
+def predict_sustainable_hr(df: pd.DataFrame, model_file: str, features: list):
+    """
+    Load a trained model and predict sustainable HR for new data.
+
+    Inputs
+    ----------
+    df : pd.DataFrame (Preprocessed dataset)
+    model_file : str (Path to trained model, joblib)
+    features : list (Feature columns for prediction)
+
+    Returns
+    -------
+    pd.Series (Predicted sustainable HR)
+
+    """
+    model_path = Path(model_file)
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found: {model_file}")
+
+    model = joblib.load(model_path)
+    df = df.copy()
+    df["predicted_sustainable_hr"] = model.predict(df[features])
+    return df["predicted_sustainable_hr"]
+
     
     
