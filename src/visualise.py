@@ -2,32 +2,26 @@
 This module handles the visulisation of data and model results
 
 """
-# src/visualise.py
-from . import pd, np, plt, sns
 
-def plot_hr(df, rolling_window: int = 5):
-    """
-    Plot heart rate and rolling average over time
-    """
-    if 'hr_rolling' not in df.columns:
-        df['hr_rolling'] = df['heart_rate'].rolling(rolling_window, min_periods=1).mean()
+from . import pd, plt, sns
 
-    plt.figure(figsize=(10,5))
-    plt.plot(df['timestamp'], df['heart_rate'], label="HR")
-    plt.plot(df['timestamp'], df['hr_rolling'], linestyle='--', label=f"Rolling Avg ({rolling_window})")
-    plt.xlabel("Time")
-    plt.ylabel("Heart Rate (bpm)")
-    plt.title("Heart Rate over Time")
-    plt.legend()
+def plot_hr_vs_distance(df: pd.DataFrame):
+    plt.figure(figsize=(7, 4))
+    sns.scatterplot(data=df, x="distance_km", y="avg_hr", alpha=0.8)
+    plt.title("Average HR vs Distance")
+    plt.xlabel("Distance (km)")
+    plt.ylabel("Average HR (bpm)")
+    plt.grid(True, linestyle="--", alpha=0.6)
     plt.show()
 
-def plot_distance_vs_hr(df):
-    """
-    Scatter plot of distance vs heart rate
-    """
-    plt.figure(figsize=(8,5))
-    sns.scatterplot(x='distance', y='heart_rate', hue='activity_type', data=df)
-    plt.xlabel("Distance (m)")
-    plt.ylabel("Heart Rate (bpm)")
-    plt.title("Distance vs Heart Rate")
+def plot_predicted_vs_actual(df: pd.DataFrame, actual_col: str, predicted_col: str):
+    plt.figure(figsize=(6, 6))
+    sns.scatterplot(data=df, x=actual_col, y=predicted_col, alpha=0.8)
+    plt.plot([df[actual_col].min(), df[actual_col].max()],
+             [df[actual_col].min(), df[actual_col].max()],
+             color="red", linestyle="--")
+    plt.title("Predicted vs Actual HR")
+    plt.xlabel("Actual HR (bpm)")
+    plt.ylabel("Predicted HR (bpm)")
+    plt.grid(True, linestyle="--", alpha=0.6)
     plt.show()

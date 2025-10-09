@@ -1,0 +1,54 @@
+# ---------------------------
+# Paths
+# ---------------------------
+paths:
+  data_folder: "data"                    # Folder where CSVs are stored
+  dummy_data_file: "data/dummy_running_data.csv"
+  model_file: "models/sustainable_hr_model.pkl"
+  results_folder: "results"              # Optional folder to save outputs
+
+# ---------------------------
+# Data Generation / Dummy Data
+# ---------------------------
+dummy_data:
+  n_runs: 120
+  random_seed: 42
+
+# ---------------------------
+# Preprocessing
+# ---------------------------
+preprocessing:
+  drop_na_columns:
+    - avg_hr
+    - distance_km
+    - effort_score
+  normalize_columns:
+    - distance_km
+    - effort_score
+
+# ---------------------------
+# Modelling
+# ---------------------------
+modelling:
+  features:
+    - distance_km_norm
+    - effort_score_norm
+  target: avg_hr
+  model_type: linear_regression
+
+# ---------------------------
+# Evaluation
+# ---------------------------
+evaluation:
+  metrics:
+    - MAE
+    - RMSE
+    - R2
+
+# ---------------------------
+# Visualization
+# ---------------------------
+visualization:
+  show_plots: True
+  save_plots: False
+  figsize: [7, 4]
