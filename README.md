@@ -27,4 +27,4 @@ Project layout
 - `data/` — raw and processed CSVs
 - `notebooks/` — exploratory notebooks
 
-If you want further refactoring (packaging, tests, CI), tell me which area to focus on.
+
