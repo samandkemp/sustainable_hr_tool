@@ -10,7 +10,8 @@ Functions
   optional normalization and duration/pacing computations.
 """
 
-from . import pd, np
+import pandas as pd
+import numpy as np
 
 
 def compute_pace(df: pd.DataFrame) -> pd.DataFrame:

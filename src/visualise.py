@@ -3,7 +3,9 @@ This module handles the visulisation of data and model results
 
 """
 
-from . import pd, plt, sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def plot_hr_vs_distance(df: pd.DataFrame):
     plt.figure(figsize=(7, 4))

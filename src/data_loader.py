@@ -4,14 +4,21 @@ This module loads and transforms Garmin CSV data into a pandas DataFrame.
 """
 
 from pathlib import Path
-from . import pd
+import pandas as pd
+import re
+import numpy as np
+from typing import Optional
 
 def load_data(file_path: str) -> pd.DataFrame:
     # Single CSV load
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
-    return pd.read_csv(path)
+    df = pd.read_csv(path)
+    # If this looks like the Garmin Activities export, parse into canonical schema
+    if "Activity Type" in df.columns or "Activity" in path.name:
+        return parse_activities_csv(df)
+    return df
 
 def load_all_data(folder_path: str) -> pd.DataFrame:
     # Complete CSV load
@@ -23,5 +30,117 @@ def load_all_data(folder_path: str) -> pd.DataFrame:
     if not all_files:
         raise FileNotFoundError(f"No CSV files found in folder: {folder_path}")
 
-    df_list = [pd.read_csv(f) for f in all_files]
+    df_list = []
+    for f in all_files:
+        tmp = pd.read_csv(f)
+        if "Activity Type" in tmp.columns or "Activity" in f.name:
+            tmp = parse_activities_csv(tmp)
+        df_list.append(tmp)
     return pd.concat(df_list, ignore_index=True)
+
+
+def _snake_case(name: str) -> str:
+    name = name.strip()
+    name = re.sub(r"[\s/\-]+", "_", name)
+    name = re.sub(r"[^0-9a-zA-Z_]+", "", name)
+    return name.lower()
+
+
+def _time_to_minutes(t: str) -> Optional[float]:
+    """Convert HH:MM:SS or MM:SS to minutes (float)."""
+    if pd.isna(t):
+        return None
+    t = str(t)
+    parts = t.split(":")
+    try:
+        parts = [float(p) for p in parts]
+    except ValueError:
+        return None
+    if len(parts) == 3:
+        h, m, s = parts
+    elif len(parts) == 2:
+        h = 0.0
+        m, s = parts
+    else:
+        return None
+    return h * 60.0 + m + s / 60.0
+
+
+def _pace_to_min_per_km(pace: str) -> Optional[float]:
+    """Convert pace strings like '12:51' (min:sec) to minutes per km float."""
+    if pd.isna(pace):
+        return None
+    s = str(pace).strip()
+    if s == "":
+        return None
+    parts = s.split(":")
+    try:
+        parts = [float(p) for p in parts]
+    except ValueError:
+        return None
+    if len(parts) == 2:
+        m, sec = parts
+        return m + sec / 60.0
+    if len(parts) == 3:
+        h, m, sec = parts
+        return h * 60.0 + m + sec / 60.0
+    return None
+
+
+def _clean_numeric(x):
+    if pd.isna(x):
+        return None
+    s = str(x).replace(",", "").strip()
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse a Garmin Activities CSV (one row per activity) into a canonical table.
+
+    The returned DataFrame uses snake_case columns and ensures numeric
+    `distance_km`, `duration_min`, `avg_pace_min_km`, `avg_hr`, and
+    `elevation_gain_m` when possible.
+    """
+    df = df.copy()
+    # Normalize column names
+    col_map = {c: _snake_case(c) for c in df.columns}
+    df.columns = [col_map[c] for c in df.columns]
+
+    # Common column aliases
+    # distance may be 'distance' with km units
+    if "distance" in df.columns:
+        df["distance_km"] = df["distance"].apply(_clean_numeric)
+
+    # Duration: try columns 'time', 'moving_time', 'elapsed_time'
+    for cand in ("time", "moving_time", "elapsed_time"):
+        if cand in df.columns:
+            df["duration_min"] = df[cand].apply(_time_to_minutes)
+            break
+
+    # Average pace may be 'avg_pace' or 'avg_pace_min_km' or 'avg_pace' string
+    for cand in ("avg_pace", "avg_pace_min_km", "avg_pace_min_km"):
+        if cand in df.columns:
+            df["avg_pace_min_km"] = df[cand].apply(_pace_to_min_per_km)
+            break
+
+    # Heart rate
+    for cand in ("avg_hr", "avg_heart_rate", "avgheart" ):
+        if cand in df.columns:
+            df["avg_hr"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Elevation / ascent
+    for cand in ("total_ascent", "total_ascent", "total_ascent_m"):
+        if cand in df.columns:
+            df["elevation_gain_m"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Steps with commas
+    if "steps" in df.columns:
+        df["steps"] = df["steps"].apply(lambda x: int(str(x).replace(",", "")) if pd.notna(x) and str(x).strip() != "" else None)
+
+    # Keep a conservative set of columns; preserve others too
+    return df

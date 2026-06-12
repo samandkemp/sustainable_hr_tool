@@ -11,7 +11,9 @@ To-do:
 """
 
 from pathlib import Path
-from . import pd, np, os
+import pandas as pd
+import numpy as np
+import os
 
 def check_dataframe(df: pd.DataFrame, name: str = "DataFrame") -> None:
     print(f"\n{name}: {df.shape[0]} rows × {df.shape[1]} cols")
