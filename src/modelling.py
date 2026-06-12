@@ -8,42 +8,59 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 from pathlib import Path
+from typing import Union
+from . import features as feat
 
 # ---------------------------
 # Train Model
 # ---------------------------
 
-def fit_sustainable_hr_model(df: pd.DataFrame, features: list, target: str, model_file: str = None):
-    """
-    Train a linear regression model to predict sustainable HR.
+def _default_hr_features(df: pd.DataFrame) -> list:
+    candidates = [
+        "distance_km",
+        "avg_pace_min_km",
+        "elevation_gain_m",
+        "temperature_c",
+        "effort_score",
+        "duration_min",
+    ]
+    return [c for c in candidates if c in df.columns]
 
-    Inputs
-    ----------
-    df : pd.DataFrame (Preprocessed dataset)
-    features : list (Feature column names)
-    target : str Target (column name (e.g., 'avg_hr'))
-    model_file : str, optional (Path to save the trained model, joblib)
-    
-    Returns
-    -------
-    model : trained sklearn model
-    df_pred : pd.DataFrame (with pred. HR)
+
+def fit_sustainable_hr_model(
+    df: pd.DataFrame,
+    features: list = None,
+    target: str = "avg_hr",
+    model_file: Union[str, None] = None,
+) -> tuple:
+    """Train a baseline linear model to predict sustainable HR.
+
+    The function is intentionally simple (linear regression) to provide an
+    interpretable baseline. If `features` is not provided a sensible default
+    set is selected from available columns.
+
+    Returns (model, df_with_predictions).
     """
     df = df.copy()
-    
+
+    if features is None:
+        features = _default_hr_features(df)
+
+    if not features:
+        raise ValueError("No candidate features found for HR model. Provide `features`.")
+
     X = df[features]
     y = df[target]
 
-    # Train-test split (optional for full dataset you could skip)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     model = LinearRegression()
     model.fit(X_train, y_train)
 
-    # Predict for the full dataset
+    # Predict for the full dataset and attach predictions
     df["predicted_sustainable_hr"] = model.predict(X)
 
-    # Save model if path provided
+    # Persist model if requested
     if model_file:
         Path(model_file).parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, model_file)
@@ -54,29 +71,62 @@ def fit_sustainable_hr_model(df: pd.DataFrame, features: list, target: str, mode
 # Predict New Data
 # ---------------------------
 
-def predict_sustainable_hr(df: pd.DataFrame, model_file: str, features: list):
+def predict_sustainable_hr(df: pd.DataFrame, model_or_path: Union[str, object], features: list):
+    """Predict sustainable HR using a model object or a path to a joblib file.
+
+    `model_or_path` may be a fitted estimator with `predict` or a path to a
+    persisted joblib file.
     """
-    Load a trained model and predict sustainable HR for new data.
-
-    Inputs
-    ----------
-    df : pd.DataFrame (Preprocessed dataset)
-    model_file : str (Path to trained model, joblib)
-    features : list (Feature columns for prediction)
-
-    Returns
-    -------
-    pd.Series (Predicted sustainable HR)
-
-    """
-    model_path = Path(model_file)
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found: {model_file}")
-
-    model = joblib.load(model_path)
     df = df.copy()
+    # Load model if a path is provided
+    if isinstance(model_or_path, str):
+        model_path = Path(model_or_path)
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found: {model_or_path}")
+        model = joblib.load(model_path)
+    else:
+        model = model_or_path
+
     df["predicted_sustainable_hr"] = model.predict(df[features])
     return df["predicted_sustainable_hr"]
+
+
+def fit_pace_from_hr_model(
+    df: pd.DataFrame,
+    features: list = None,
+    target: str = "avg_pace_min_km",
+    model_file: Union[str, None] = None,
+) -> tuple:
+    """Train a baseline model that predicts pace from HR and other covariates.
+
+    Useful for the inverse-scenario: given HR and distance, what pace is
+    expected.
+    """
+    df = df.copy()
+    # sensible defaults: use HR + simple covariates
+    if features is None:
+        candidates = ["avg_hr", "distance_km", "elevation_gain_m", "effort_score"]
+        features = [c for c in candidates if c in df.columns]
+
+    if not features:
+        raise ValueError("No candidate features found for pace model. Provide `features`.")
+
+    X = df[features]
+    y = df[target]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    df["predicted_pace_min_km"] = model.predict(X)
+
+    if model_file:
+        Path(model_file).parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, model_file)
+
+    return model, df
+
 
     
     
