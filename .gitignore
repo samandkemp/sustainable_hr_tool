@@ -48,3 +48,25 @@ Thumbs.db
 # === OS ===
 .DS_Store
 desktop.ini
+
+# === Build, caches, models ===
+.pytest_cache/
+.mypy_cache/
+.cache/
+htmlcov/
+coverage.xml
+dist/
+build/
+
+# Model and serialized artifacts
+models/
+*.joblib
+*.pkl
+
+# Environment files
+.env
+.python-version
+.venv/
+
+# Editor/project files
+.ropeproject/
