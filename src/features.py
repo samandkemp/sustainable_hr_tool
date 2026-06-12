@@ -3,7 +3,8 @@ This module contains different computations for feature parameters.
 To-Do: 
 
 """
-from . import pd, np
+import pandas as pd
+import numpy as np
 
 
 def add_effort_score(df: pd.DataFrame, effort_col: str = "effort_type") -> pd.DataFrame:

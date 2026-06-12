@@ -8,7 +8,8 @@ These utilities are lightweight and intended to be useful during
 iteration while we have synthetic or small Garmin samples.
 """
 
-from . import pd, np
+import pandas as pd
+import numpy as np
 
 
 def ensure_target(df: pd.DataFrame, target_col: str = "avg_hr") -> pd.Series:
