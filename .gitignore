@@ -25,13 +25,15 @@ ENV/
 *.ipynb_meta.json
 
 # === Data Files ===
-data/*.csv
-data/*.xlsx
-data/*.txt
-data/*.json
+# Raw user data exports (do NOT commit user-provided exports)
+# Keep the repository template files but ignore typical user CSVs
+data/raw/
+!data/raw/template_Activities.csv
+!data/raw/README.md
 
-# (keep one example data file if you want)
-!data/README.md
+# Processed outputs and generated CSVs (pipeline outputs)
+data/processed/
+!data/processed/README.md
 
 # === Logs and temporary files ===
 *.log
