@@ -3,10 +3,10 @@ This module computes evaluation metrics to understand model performance
 
 """
 
-from . import np, pd
+import numpy as np
+import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import cross_validate
-import numpy as np
 
 def evaluate_model(y_true, y_pred) -> dict:
     return {

@@ -1,13 +1,5 @@
 """
-This module contains utility functions for the tool.
-Utils: 
-- dummy CSV data generator
-- check df structure
-
-To-do: 
-- Error checking/validation
-- Adjust synthesised data distributions
-
+Utility functions: synthetic data generation and DataFrame inspection.
 """
 
 from pathlib import Path
@@ -137,14 +129,22 @@ def generate_synthetic_and_raw(
     steps = proc_df.get("steps")
     if steps is None or steps.isnull().all():
         steps = (proc_df.get("distance_km", 0) * 1000).astype(int)
-    raw_df["Steps"] = steps.apply(lambda x: f"{int(x):,}")
+    raw_df["Steps"] = steps.apply(lambda x: f"{int(x):,}" if pd.notna(x) else "")
     raw_df["Decompression"] = "No"
     raw_df["Best Lap Time"] = proc_df.get("duration_min").apply(lambda m: minutes_to_hms(m/ (1 if m is None else 1)))
     raw_df["Number of Laps"] = 1
     raw_df["Moving Time"] = proc_df.get("duration_min").apply(minutes_to_hms)
     raw_df["Elapsed Time"] = proc_df.get("duration_min").apply(minutes_to_hms)
-    raw_df["Min Elevation"] = proc_df.get("elevation_min", 0).fillna(0).astype(int)
-    raw_df["Max Elevation"] = proc_df.get("elevation_max", raw_df["Total Ascent"]).fillna(0).astype(int)
+    raw_df["Min Elevation"] = (
+        proc_df["elevation_min"].fillna(0).astype(int)
+        if "elevation_min" in proc_df.columns
+        else 0
+    )
+    raw_df["Max Elevation"] = (
+        proc_df["elevation_max"].fillna(0).astype(int)
+        if "elevation_max" in proc_df.columns
+        else raw_df["Total Ascent"].fillna(0).astype(int)
+    )
 
     # Reorder columns to match an Activities export if possible
     if template_file.exists():

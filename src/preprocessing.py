@@ -55,7 +55,7 @@ def preprocess_data(
         Input raw/run-level dataframe.
     drop_na_columns : list, optional
         Columns to require (rows missing these are dropped).
-    normalise : list, optional
+    normalize : list, optional
         Numeric columns to z-normalise.
     compute_features : bool, default True
         Whether to compute basic derived features like pace/duration.
@@ -69,7 +69,7 @@ def preprocess_data(
 
     # Basic cleaning
     if drop_na_columns:
-        df.dropna(subset=drop_na_columns, inplace=True)
+        df = df.dropna(subset=drop_na_columns)
 
     # Feature computations
     if compute_features:

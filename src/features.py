@@ -1,7 +1,5 @@
 """
 This module contains different computations for feature parameters.
-To-Do: 
-
 """
 import pandas as pd
 import numpy as np
@@ -51,14 +49,68 @@ def fatigue_proxies(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Run a sequence of feature engineering steps for modelling.
+def rolling_training_load(
+    df: pd.DataFrame,
+    window: int = 7,
+    load_col: str = "distance_km",
+) -> pd.DataFrame:
+    """Add a rolling sum of training load over the previous `window` runs.
 
-    This function is safe to run on the synthetic data generator output
-    and will be expanded once real Garmin samples are available.
+    Requires the DataFrame to be in chronological order (oldest first).
+    The resulting column is named `rolling_<window>run_load`.
     """
+    df = df.copy()
+    if load_col in df.columns:
+        df[f"rolling_{window}run_load"] = (
+            df[load_col].rolling(window=window, min_periods=1).sum().round(1)
+        )
+    return df
+
+
+def compute_atl_ctl_tsb(
+    df: pd.DataFrame,
+    load_col: str = "stress_score",
+    atl_halflife: int = 7,
+    ctl_halflife: int = 42,
+) -> pd.DataFrame:
+    """Add Acute Training Load (ATL), Chronic Training Load (CTL), and Training Stress Balance (TSB).
+
+    ATL (fatigue) uses a short exponential decay; CTL (fitness) uses a long one.
+    TSB = CTL - ATL: positive means fresh/tapered, negative means fatigued.
+
+    If a date column is present the decay is calendar-aware (days). Otherwise
+    it falls back to run-indexed decay (number of runs as the time axis).
+    The load column defaults to ``stress_score`` if present, else ``distance_km``.
+    """
+    df = df.copy()
+
+    if load_col not in df.columns:
+        load_col = "distance_km"
+    if load_col not in df.columns:
+        return df
+
+    date_col = next((c for c in ("date", "activity_date") if c in df.columns), None)
+
+    if date_col:
+        dates = pd.to_datetime(df[date_col], errors="coerce")
+        load = df[load_col].fillna(0)
+        df["atl"] = load.ewm(halflife=f"{atl_halflife}D", times=dates, adjust=False).mean().round(2)
+        df["ctl"] = load.ewm(halflife=f"{ctl_halflife}D", times=dates, adjust=False).mean().round(2)
+    else:
+        load = df[load_col].fillna(0)
+        df["atl"] = load.ewm(halflife=atl_halflife, adjust=False).mean().round(2)
+        df["ctl"] = load.ewm(halflife=ctl_halflife, adjust=False).mean().round(2)
+
+    df["tsb"] = (df["ctl"] - df["atl"]).round(2)
+    return df
+
+
+def compute_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Run a sequence of feature engineering steps for modelling."""
     df = df.copy()
     df = add_effort_score(df)
     df = elevation_adjusted_pace(df)
     df = fatigue_proxies(df)
+    df = rolling_training_load(df)
+    df = compute_atl_ctl_tsb(df)
     return df

@@ -1,11 +1,10 @@
-Running the Sustainable HR Tool
-================================
+# Running the Sustainable HR Tool
 
-This document lists the quick commands to validate data, train models, and run predictions. Use a virtual environment for reproducibility.
+Commands to validate data, train models, launch the dashboard, and run predictions. All commands assume the virtual environment is active.
 
-Prerequisites
+## Prerequisites
 
-- Create and activate a virtual environment, then install dependencies:
+Create and activate a virtual environment, then install dependencies:
 
 ```powershell
 python -m venv .venv
@@ -13,108 +12,102 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Optional: install tools as console scripts
+## Dashboard
 
-To expose small utilities on your PATH, install the repository in editable mode (from the project root):
+The easiest way to explore your data is via the Streamlit dashboard:
+
+```powershell
+streamlit run dashboard.py
+```
+
+The dashboard automatically loads data from `data/processed/` or `data/raw/`, trains models if none are saved, and opens a browser window with four tabs: Overview, Training History, Analysis, and Race Predictions. Click **Reload data** in the sidebar after adding or updating CSV files.
+
+## Training pipeline (CLI)
+
+Run the full pipeline — validation → cross-validation → model fitting → diagnostic plots:
+
+```powershell
+# Use CSVs in data/raw (or data/processed if present)
+python -m src.train
+
+# Use synthetic data for a quick experiment
+python -m src.train --synthetic
+
+# Auto-generate synthetic data if no CSVs are found (non-interactive)
+python -m src.train --auto-synthetic --model-dir scratch_models
+```
+
+Models, CV results, and diagnostic plots are saved to `--model-dir` (defaults to `models/`).
+
+## Validate only
+
+Run schema validation without training. Writes `validation_report.json` to the model directory.
+
+```powershell
+python -m src.train --input data/raw --model-dir scratch_models --validate-only
+```
+
+## Data folders
+
+| Folder | Purpose |
+|---|---|
+| `data/raw/` | Drop Garmin `Activities.csv` exports here |
+| `data/processed/` | Pre-processed CSVs; takes priority over `data/raw/` when no `--input` is given |
+| `models/` | Saved `.joblib` model files (persisted between runs) |
+| `scratch_models/` | Disposable outputs for quick experiments (git-ignored) |
+
+The `--synthetic` flag writes a processed CSV to `data/processed/processed_synthetic.csv` and a Garmin-style raw CSV to `data/raw/Activities_synthetic.csv`. If a real `Activities.csv` is present in `data/raw/`, its column layout is used as the template for the synthetic export.
+
+## Behaviour when no data is present
+
+- The CLI prefers CSVs in `data/processed/`, falling back to `data/raw/`.
+- If neither folder contains CSVs, the CLI will prompt interactively to generate synthetic data.
+- Use `--auto-synthetic` to skip the prompt and generate synthetic data automatically.
+
+## Loading a saved model
+
+```python
+import joblib
+from src import data_loader, preprocessing, features
+
+model = joblib.load('models/hr_model.joblib')
+df = data_loader.load_data('data/raw/Activities.csv')
+df_proc = preprocessing.preprocess_data(df, drop_na_columns=['distance_km'])
+df_feat = features.compute_features(df_proc)
+
+feature_cols = [
+    c for c in df_feat.select_dtypes(include=['number']).columns
+    if c != 'avg_hr' and not c.startswith('predicted_')
+]
+df_feat['predicted_sustainable_hr'] = model.predict(df_feat[feature_cols])
+```
+
+## Install as editable package (optional)
+
+To expose utility scripts as console commands on your PATH, install the project in editable mode from the project root:
 
 ```powershell
 python -m pip install -e .
 ```
 
-This provides two convenient commands after install:
-- `srht-validate` — runs the validation helper (`tools.validate_and_clean:main`)
-- `srht-predict`  — runs the scenario predictor (`tools.predict_scenario:main`)
+This provides two commands:
 
-Run these tools with the same Python environment where the project dependencies are installed.
+| Command | Description |
+|---|---|
+| `srht-validate` | Runs schema validation (`tools.validate_and_clean:main`) |
+| `srht-predict` | Runs a scenario prediction (`tools.predict_scenario:main`) |
 
-Validate data only
+See [tools/README.md](../tools/README.md) for usage examples.
 
-Run lightweight validation (no training). This writes `validation_report.json` to the model directory.
+## Key source files
 
-```powershell
-# Validate all CSVs in the data/raw folder and save results to a disposable folder
-python -m src.train --input data/raw --model-dir scratch_models --validate-only
-```
-
-Disposable helper
-
-There is a disposable PowerShell helper under `scratch/` to run validation and optionally delete the scratch output:
-
-```powershell
-# Run validation and leave outputs
-.\scratch\validate_and_clean.ps1 -input data/raw -modeldir scratch_models
-# Run validation and delete the scratch_models folder afterwards
-.\scratch\validate_and_clean.ps1 -input data/raw -modeldir scratch_models -clean
-```
-
-Train models
-
-Run the full pipeline (validation -> CV -> final fit). Models, CV results and reports will be saved to the model directory.
-
-```powershell
-python -m src.train --input data/raw --model-dir scratch_models
-```
-
-Use synthetic data for quick experiments:
-
-```powershell
-python -m src.train --synthetic --model-dir scratch_models
-```
-
-Notes on data folders
-- Place raw activity CSVs into `data/raw/`. If you have already sanitised or combined data, place CSVs into `data/processed/` and the training pipeline will prefer those files by default when no `--input` is given.
-- The `--synthetic` option writes a processed CSV to `data/processed/processed_synthetic.csv` and a Garmin-style raw CSV to `data/raw/Activities_synthetic.csv` as a template.
-
-- The synthetic raw CSV is generated to match the columns emitted by your watch export (`data/raw/Activities.csv`) when that file exists; otherwise the included `data/raw/template_Activities.csv` is used as the header template. This helps ensure synthetic data mirrors real exported columns.
-
-Behaviour when no data is present
-
-- The training CLI prefers CSVs in `data/processed/`, falling back to `data/raw/`.
-- If no CSVs are found, the CLI will prompt interactively to generate synthetic data. Use `--auto-synthetic` to generate synthetic data non-interactively.
-
-Examples:
-
-```powershell
-# Interactive prompt if no data found
-python -m src.train --model-dir scratch_models
-
-# Skip prompt and auto-generate synthetic data
-python -m src.train --auto-synthetic --model-dir scratch_models
-```
-
-Load a saved model and make predictions (example script snippet)
-
-```python
-import joblib
-import pandas as pd
-model = joblib.load('scratch_models/hr_model.joblib')
-df = pd.read_csv('data/raw/Activities.csv')
-# Preprocess and feature-engineer as in the pipeline
-from src import data_loader, preprocessing, features
-df = data_loader.load_data('data/raw/Activities.csv')
-df_proc = preprocessing.preprocess_data(df, drop_na_columns=['distance_km'])
-df_feat = features.compute_features(df_proc)
-# Select features used by the model (example)
-feature_cols = [c for c in df_feat.select_dtypes(include=['number']).columns if c != 'avg_hr' and not c.startswith('predicted_')]
-preds = model.predict(df_feat[feature_cols])
-df_feat['predicted_sustainable_hr'] = preds
-```
-
-Cleaning up
-
-Remove disposable outputs and scripts by deleting the `scratch/` folder and any `scratch_models` directory you created:
-
-```powershell
-rmdir /s /q scratch_models
-rmdir /s /q scratch
-```
-
-Files of interest
-
-- Training CLI: [src/train.py](src/train.py)
-- Data loading & parsing: [src/data_loader.py](src/data_loader.py)
-- Preprocessing: [src/preprocessing.py](src/preprocessing.py)
-- Feature engineering: [src/features.py](src/features.py)
-- Models: [src/modelling.py](src/modelling.py)
-- Validation helpers: [src/validation.py](src/validation.py)
-- CV plotting: [src/evaluation_visuals.py](src/evaluation_visuals.py)
+| File | Purpose |
+|---|---|
+| `src/train.py` | Training CLI |
+| `src/data_loader.py` | CSV ingestion and column normalisation |
+| `src/preprocessing.py` | Cleaning and type coercion |
+| `src/features.py` | Feature engineering |
+| `src/modelling.py` | Model training |
+| `src/validation.py` | Schema validation and PII removal |
+| `src/race_predictor.py` | Race prediction logic |
+| `src/evaluation_visuals.py` | Diagnostic plots |

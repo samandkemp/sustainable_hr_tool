@@ -149,7 +149,7 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
             break
 
     # Elevation / ascent
-    for cand in ("total_ascent", "total_ascent", "total_ascent_m"):
+    for cand in ("total_ascent", "total_ascent_m"):
         if cand in df.columns:
             df["elevation_gain_m"] = df[cand].apply(_clean_numeric)
             break
@@ -171,13 +171,6 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
         if cand in df.columns:
             df["best_pace_min_km"] = df[cand].apply(_pace_to_min_per_km)
             break
-
-    # Steps (already handled broadly above) - ensure numeric
-    if "steps" in df.columns:
-        try:
-            df["steps"] = df["steps"].apply(lambda x: int(str(x).replace(",", "")) if pd.notna(x) and str(x).strip() != "" else None)
-        except Exception:
-            pass
 
     # Stride length
     for cand in ("avg_stride_length", "avg stride length"):

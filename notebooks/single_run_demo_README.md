@@ -1,39 +1,46 @@
-single_run_demo.ipynb — Quick Notebook Guide
+# single_run_demo.ipynb — Notebook Guide
 
-Purpose
-- Walk through the common Load → Validate → Preprocess → Feature → Train → Evaluate → Inspect workflow for Garmin running activities.
+An end-to-end walkthrough of the analysis pipeline using Garmin running activity data. Covers data loading, validation, feature engineering, model training, cross-validation, and race predictions.
 
-Sections / Cells
-- Setup & imports: creates `OUT_DIR`, imports `src` helpers, and lists requirements (see `requirements.txt`).
-- Load data: loads CSVs from `data/raw/` using `src.data_loader.load_all_data()`.
-- Validate data: runs `src.validation.validate_and_coerce()` and writes a small report to `OUT_DIR`.
-- Preprocess & features: calls `src.preprocessing.preprocess_data()` then `src.features.compute_features()`.
-- Select features & train baseline: selects numeric features, fits `src.modelling.fit_sustainable_hr_model()` and writes `hr_model.joblib` to `OUT_DIR`.
-- Cross-validation (quick): runs `src.evaluation.cross_validate_model_from_df()` (default 5 folds), saves `cv_hr_results.json` and `cv_fold_errors.png`.
-- Save predictions and visualisations: saves `predictions.csv` and diagnostic PNGs (predicted_vs_actual, residuals_distribution, feature_importance).
-- Scenario prediction example: builds a median-based scenario via `src.targets.build_scenario_template()` and predicts using the trained model.
-- Next steps: short suggestions for improvements (more features, HPO, tests).
+## Sections
 
-How to run
+| Section | Description |
+|---|---|
+| Setup & imports | Creates the output directory and imports `src` helpers |
+| Load data | Loads CSVs from `data/raw/` using `data_loader.load_all_data()` |
+| Validate data | Runs `validation.validate_and_coerce()` and saves a report to the output directory |
+| Preprocess & features | Calls `preprocessing.preprocess_data()` then `features.compute_features()` |
+| Select features & train | Fits `modelling.fit_sustainable_hr_model()` and saves `hr_model.joblib` |
+| Cross-validation | Runs 5-fold CV via `evaluation.cross_validate_model_from_df()` and saves a fold-error plot |
+| Save predictions & plots | Writes `predictions.csv` and diagnostic PNGs to the output directory |
+| Scenario prediction | Builds a median-based scenario and predicts HR using the trained model |
+| Training history | Plots cumulative distance and rolling 7-run training load |
+| Inverse pace model | Trains `modelling.fit_pace_from_hr_model()` and evaluates metrics |
+| Race predictions | Generates forward, inverse, and target-time predictions via `race_predictor.race_report()` |
+
+Outputs are written to `scratch_models/` by default. Delete the folder to remove disposable artefacts.
+
+## How to run
+
 1. Create and activate a virtual environment and install dependencies:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+python -m pip install jupyter
 ```
 
-2. Start Jupyter and open the notebook:
+2. Open the notebook:
 
 ```powershell
-python -m pip install jupyter
 python -m jupyter notebook notebooks\single_run_demo.ipynb
 ```
 
-Notes
-- Outputs are written to `OUT_DIR` inside the notebook (defaults to `scratch_models` when set). Remove the folder to clean disposable artifacts.
-- If your system Python lacks `pip` (MSYS/MinGW), run the `requirements.txt` install with the same interpreter you use to run Jupyter.
-- See `docs/RUNNING.md` for a longer run guide and `scratch/predict_scenario.py` for a CLI-style example.
+3. Replace the `data/raw/` placeholder with your own `Activities.csv` export from Garmin Connect, then run all cells.
 
-Contact
-- If you'd like, I can open and run the notebook cells here, or add a rendered HTML summary for quick inspection.
+## Notes
+
+- If `data/raw/` is empty, generate synthetic data first: `python -m src.train --synthetic`.
+- For an interactive dashboard view, run `streamlit run dashboard.py` from the project root.
+- See [docs/RUNNING.md](../docs/RUNNING.md) for the full CLI reference.
