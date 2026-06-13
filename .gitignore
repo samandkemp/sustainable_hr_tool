@@ -25,13 +25,11 @@ ENV/
 *.ipynb_meta.json
 
 # === Data Files ===
-# Raw user data exports (do NOT commit user-provided exports)
-# Keep the repository template files but ignore typical user CSVs
+# Raw user data exports — do not commit personal activity files
 data/raw/
-!data/raw/template_Activities.csv
 !data/raw/README.md
 
-# Processed outputs and generated CSVs (pipeline outputs)
+# Processed and generated CSVs (pipeline outputs)
 data/processed/
 !data/processed/README.md
 
@@ -64,6 +62,10 @@ build/
 models/
 *.joblib
 *.pkl
+
+# Scratch / temporary output directories
+scratch_models/
+results/
 
 # Environment files
 .env

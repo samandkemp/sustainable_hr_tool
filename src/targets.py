@@ -32,11 +32,8 @@ def build_scenario_template(df: pd.DataFrame, pace_min_km: float, distance_km: f
     """
     numeric = df.select_dtypes(include=[np.number]).median()
     scenario = numeric.to_frame().T
-    # Ensure pace and distance present and set
     scenario["avg_pace_min_km"] = pace_min_km
     scenario["distance_km"] = distance_km
-    # Fill any missing columns with 0
-    scenario = scenario.reindex(columns=df.columns, fill_value=0)
     return scenario.reset_index(drop=True)
 
 
@@ -63,5 +60,4 @@ def build_inverse_scenario(df: pd.DataFrame, hr: float, distance_km: float) -> p
     scenario = numeric.to_frame().T
     scenario["avg_hr"] = hr
     scenario["distance_km"] = distance_km
-    scenario = scenario.reindex(columns=df.columns, fill_value=0)
     return scenario.reset_index(drop=True)

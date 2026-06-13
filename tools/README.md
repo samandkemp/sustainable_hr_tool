@@ -1,57 +1,57 @@
-Tools
------
+# Tools
 
-This folder contains small vetted utilities intended to replace ad-hoc scripts
-previously placed under `scratch/`.
+Small utility scripts for common pipeline operations. These replace ad-hoc scripts and are safe to include in automated workflows.
 
-Utilities
-- `validate_and_clean.py`: Run validation (`src.train --validate-only`) and optionally remove the output folder. Use the same Python interpreter to ensure consistency.
-- `predict_scenario.py`: Load a saved model from a model directory and predict a median-based scenario. Supports custom model filenames and CSV/JSON outputs.
+## Utilities
 
-Examples
+| Script | Description |
+|---|---|
+| `validate_and_clean.py` | Runs schema validation and optionally removes the output folder |
+| `predict_scenario.py` | Loads a saved model and predicts a median-based scenario |
 
-Run validation and keep outputs:
+## Examples
+
+**Validate data and keep outputs:**
 
 ```powershell
 python tools/validate_and_clean.py --input data/raw --model-dir scratch_models
 ```
 
-Run validation and delete outputs after completion:
+**Validate data and delete outputs afterwards:**
 
 ```powershell
 python tools/validate_and_clean.py --input data/raw --model-dir scratch_models --clean
 ```
 
-Predict a scenario (default expects `hr_model.joblib` in `--model-dir`):
+**Predict a scenario (defaults to `hr_model.joblib` in `--model-dir`):**
 
 ```powershell
 python tools/predict_scenario.py --model-dir scratch_models --pace 5.0 --distance 10.0
 ```
 
-Specify a custom model filename and JSON output:
+**Predict with a custom model file and JSON output:**
 
 ```powershell
 python tools/predict_scenario.py --model-dir scratch_models --model-file my_model.joblib --format json --output my_scenario.json --pace 5.0 --distance 10.0
 ```
 
-Notes
-- Run these tools using the same Python environment where the project dependencies are installed (use the venv created with `python -m venv .venv` and `python -m pip install -r requirements.txt`).
+## Install as console scripts (optional)
 
-Install as editable package (optional)
-
-To make the tools available as console scripts on your PATH, install the project in editable mode:
+Install the project in editable mode to make these tools available as commands on your PATH:
 
 ```powershell
 python -m pip install -e .
 ```
 
-This installs two commands:
-
-- `srht-validate` -> runs `tools.validate_and_clean:main`
-- `srht-predict`  -> runs `tools.predict_scenario:main`
+| Command | Runs |
+|---|---|
+| `srht-validate` | `tools.validate_and_clean:main` |
+| `srht-predict` | `tools.predict_scenario:main` |
 
 Uninstall with:
 
 ```powershell
 python -m pip uninstall sustainable_hr_tool
 ```
+
+> Run all tools using the same Python environment as the project (the `.venv` created with `python -m venv .venv`).

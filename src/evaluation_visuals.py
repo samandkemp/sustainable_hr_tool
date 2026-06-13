@@ -9,6 +9,58 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
+def plot_hr_vs_distance(df: pd.DataFrame, out_path: str = None):
+    """Scatter plot of average HR versus distance for exploratory inspection."""
+    fig, ax = plt.subplots(figsize=(7, 4))
+    sns.scatterplot(data=df, x="distance_km", y="avg_hr", alpha=0.8, ax=ax)
+    ax.set_title("Average HR vs Distance")
+    ax.set_xlabel("Distance (km)")
+    ax.set_ylabel("Average HR (bpm)")
+    ax.grid(True, linestyle="--", alpha=0.6)
+    fig.tight_layout()
+    if out_path:
+        fig.savefig(out_path)
+        plt.close(fig)
+    else:
+        plt.show()
+
+
+def plot_hr_vs_pace(df: pd.DataFrame, out_path: str = None):
+    """Scatter plot of average HR versus pace for exploratory inspection."""
+    if "avg_pace_min_km" not in df.columns:
+        raise KeyError("avg_pace_min_km not found in dataframe")
+    fig, ax = plt.subplots(figsize=(7, 4))
+    sns.scatterplot(data=df, x="avg_pace_min_km", y="avg_hr", alpha=0.8, ax=ax)
+    ax.set_title("Average HR vs Pace")
+    ax.set_xlabel("Pace (min/km)")
+    ax.set_ylabel("Average HR (bpm)")
+    ax.grid(True, linestyle="--", alpha=0.6)
+    fig.tight_layout()
+    if out_path:
+        fig.savefig(out_path)
+        plt.close(fig)
+    else:
+        plt.show()
+
+
+def plot_training_history(df: pd.DataFrame, metric: str = "distance_km", out_path: str = None):
+    """Line chart of a metric over runs, useful for viewing training load over time."""
+    if metric not in df.columns:
+        raise KeyError(f"Column '{metric}' not found in dataframe")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(df[metric].values, marker="o", markersize=3, linewidth=1)
+    ax.set_title(f"Training history: {metric}")
+    ax.set_xlabel("Run index")
+    ax.set_ylabel(metric)
+    ax.grid(True, linestyle="--", alpha=0.6)
+    fig.tight_layout()
+    if out_path:
+        fig.savefig(out_path)
+        plt.close(fig)
+    else:
+        plt.show()
+
+
 def plot_cv_metrics(cv_results: dict, out_path=None):
     """Plot cross-validation fold metrics (MAE and RMSE) from cv_results dict.
 
@@ -105,17 +157,29 @@ def plot_predicted_vs_actual(y_true, y_pred, out_path: str = None):
 
 
 def plot_feature_importance(model, feature_names, out_path: str = None, top_n: int = 20):
-    """Plot coefficient magnitudes for a linear model as a simple feature-importance proxy."""
-    if not hasattr(model, "coef_"):
-        raise ValueError("Model does not expose `coef_` (not a linear estimator)")
-    coefs = model.coef_
-    df = pd.DataFrame({"feature": feature_names, "coef": coefs})
-    df["abs_coef"] = df["coef"].abs()
-    df = df.sort_values("abs_coef", ascending=False).head(top_n)
+    """Plot feature importance for linear or tree-based models.
 
-    fig, ax = plt.subplots(figsize=(6, max(3, 0.25 * len(df))))
-    sns.barplot(data=df, x="coef", y="feature", palette="vlag", ax=ax)
-    ax.set_title("Feature importance (linear coef)")
+    Uses ``coef_`` for linear models (signed) and ``feature_importances_``
+    for ensemble models (unsigned, normalised).
+    """
+    if hasattr(model, "coef_"):
+        df = pd.DataFrame({"feature": feature_names, "importance": model.coef_})
+        df = df.reindex(df["importance"].abs().sort_values(ascending=False).index).head(top_n)
+        fig, ax = plt.subplots(figsize=(6, max(3, 0.25 * len(df))))
+        sns.barplot(data=df, x="importance", y="feature", hue="feature",
+                    palette="vlag", legend=False, ax=ax)
+        ax.set_xlabel("Coefficient")
+    elif hasattr(model, "feature_importances_"):
+        df = pd.DataFrame({"feature": feature_names, "importance": model.feature_importances_})
+        df = df.sort_values("importance", ascending=False).head(top_n)
+        fig, ax = plt.subplots(figsize=(6, max(3, 0.25 * len(df))))
+        sns.barplot(data=df, x="importance", y="feature", hue="feature",
+                    palette="Blues_d", legend=False, ax=ax)
+        ax.set_xlabel("Importance")
+    else:
+        raise ValueError("Model exposes neither `coef_` nor `feature_importances_`")
+
+    ax.set_title(f"Feature importance ({type(model).__name__})")
     fig.tight_layout()
     if out_path:
         fig.savefig(out_path)
