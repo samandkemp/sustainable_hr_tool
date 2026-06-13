@@ -94,8 +94,9 @@ def compute_atl_ctl_tsb(
     if date_col:
         dates = pd.to_datetime(df[date_col], errors="coerce")
         load = df[load_col].fillna(0)
-        df["atl"] = load.ewm(halflife=f"{atl_halflife}D", times=dates, adjust=False).mean().round(2)
-        df["ctl"] = load.ewm(halflife=f"{ctl_halflife}D", times=dates, adjust=False).mean().round(2)
+        # adjust=True required when times= is supplied (pandas constraint)
+        df["atl"] = load.ewm(halflife=f"{atl_halflife}D", times=dates).mean().round(2)
+        df["ctl"] = load.ewm(halflife=f"{ctl_halflife}D", times=dates).mean().round(2)
     else:
         load = df[load_col].fillna(0)
         df["atl"] = load.ewm(halflife=atl_halflife, adjust=False).mean().round(2)
