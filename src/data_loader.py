@@ -105,7 +105,7 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
     `elevation_gain_m` when possible.
     """
     df = df.copy()
-    # Normalize column names
+    # Normalise column names
     col_map = {c: _snake_case(c) for c in df.columns}
     df.columns = [col_map[c] for c in df.columns]
 
@@ -121,7 +121,7 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
             break
 
     # Average pace may be 'avg_pace' or 'avg_pace_min_km' or 'avg_pace' string
-    for cand in ("avg_pace", "avg_pace_min_km", "avg_pace_min_km"):
+    for cand in ("avg_pace", "avg_pace_min_km", "avg pace", "avg pace (min/km)"):
         if cand in df.columns:
             df["avg_pace_min_km"] = df[cand].apply(_pace_to_min_per_km)
             break
@@ -132,10 +132,81 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
             df["avg_hr"] = df[cand].apply(_clean_numeric)
             break
 
+    # Max heart rate
+    for cand in ("max_hr", "max_heart_rate", "maxheart"):
+        if cand in df.columns:
+            df["max_hr"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Cadence
+    for cand in ("avg_cadence", "avg cadence"):
+        if cand in df.columns:
+            df["avg_cadence"] = df[cand].apply(_clean_numeric)
+            break
+    for cand in ("max_cadence", "max cadence"):
+        if cand in df.columns:
+            df["max_cadence"] = df[cand].apply(_clean_numeric)
+            break
+
     # Elevation / ascent
     for cand in ("total_ascent", "total_ascent", "total_ascent_m"):
         if cand in df.columns:
             df["elevation_gain_m"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Total descent (if present)
+    for cand in ("total_descent", "total_descent_m", "descent"):
+        if cand in df.columns:
+            df["total_descent_m"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Calories
+    for cand in ("calories", "kcal"):
+        if cand in df.columns:
+            df["calories"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Avg / best pace as additional columns
+    for cand in ("best_pace", "best pace"):
+        if cand in df.columns:
+            df["best_pace_min_km"] = df[cand].apply(_pace_to_min_per_km)
+            break
+
+    # Steps (already handled broadly above) - ensure numeric
+    if "steps" in df.columns:
+        try:
+            df["steps"] = df["steps"].apply(lambda x: int(str(x).replace(",", "")) if pd.notna(x) and str(x).strip() != "" else None)
+        except Exception:
+            pass
+
+    # Stride length
+    for cand in ("avg_stride_length", "avg stride length"):
+        if cand in df.columns:
+            df["avg_stride_length"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Training stress score
+    for cand in ("training_stress_score", "training stress score®", "tss"):
+        if cand in df.columns:
+            df["tss"] = df[cand].apply(_clean_numeric)
+            break
+
+    # Lap, moving and elapsed times
+    if "best_lap_time" in df.columns:
+        df["best_lap_min"] = df["best_lap_time"].apply(_time_to_minutes)
+    if "moving_time" in df.columns:
+        df["moving_time_min"] = df["moving_time"].apply(_time_to_minutes)
+    if "elapsed_time" in df.columns:
+        df["elapsed_time_min"] = df["elapsed_time"].apply(_time_to_minutes)
+
+    # Min/Max elevation
+    for cand in ("min_elevation", "min elevation"):
+        if cand in df.columns:
+            df["min_elevation"] = df[cand].apply(_clean_numeric)
+            break
+    for cand in ("max_elevation", "max elevation"):
+        if cand in df.columns:
+            df["max_elevation"] = df[cand].apply(_clean_numeric)
             break
 
     # Steps with commas

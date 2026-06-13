@@ -28,7 +28,7 @@ def compute_pace(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalize_columns(df: pd.DataFrame, columns: list) -> pd.DataFrame:
-    """Add z-score normalized versions for requested numeric columns.
+    """Add z-score normalised versions for requested numeric columns.
 
     New columns are suffixed with `_norm`.
     """
@@ -55,8 +55,8 @@ def preprocess_data(
         Input raw/run-level dataframe.
     drop_na_columns : list, optional
         Columns to require (rows missing these are dropped).
-    normalize : list, optional
-        Numeric columns to z-normalize.
+    normalise : list, optional
+        Numeric columns to z-normalise.
     compute_features : bool, default True
         Whether to compute basic derived features like pace/duration.
 
