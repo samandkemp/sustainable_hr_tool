@@ -6,3 +6,7 @@ scikit-learn
 joblib
 jupyter
 ipykernel
+
+# Packaging helpers (optional, for editable install)
+setuptools
+wheel
