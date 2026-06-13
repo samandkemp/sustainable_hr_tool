@@ -61,8 +61,9 @@ class TestElevationAdjustedPace:
         assert result["adj_pace_min_km"].iloc[0] == pytest.approx(5.0, abs=0.01)
 
     def test_positive_elevation_increases_pace(self):
+        # Use short distance + large gain so grade * 0.06 survives rounding to 2dp
         df = pd.DataFrame({
-            "distance_km": [10.0],
+            "distance_km": [1.0],
             "elevation_gain_m": [200.0],
             "avg_pace_min_km": [5.0],
         })

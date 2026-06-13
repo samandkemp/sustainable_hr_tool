@@ -65,8 +65,8 @@ class TestCrossValidateRegressor:
     def test_fold_arrays_length(self):
         X, y = self._simple_data()
         result = cross_validate_regressor(LinearRegression(), X, y, cv=4)
-        assert len(result["mae_folds"]) == 4
-        assert len(result["r2_folds"]) == 4
+        assert len(result["fold_mae"]) == 4
+        assert len(result["fold_r2"]) == 4
 
 
 class TestCrossValidateModelFromDf:

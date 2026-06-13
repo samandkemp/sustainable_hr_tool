@@ -15,7 +15,7 @@ class TestSnakeCase:
         assert _snake_case("Avg HR") == "avg_hr"
 
     def test_slashes_replaced(self):
-        assert _snake_case("Total Ascent/m") == "total_ascentm"
+        assert _snake_case("Total Ascent/m") == "total_ascent_m"
 
     def test_already_snake(self):
         assert _snake_case("distance_km") == "distance_km"
@@ -27,7 +27,7 @@ class TestSnakeCase:
         assert _snake_case("Training Stress Score®") == "training_stress_score"
 
     def test_mixed_separators(self):
-        assert _snake_case("Avg-Pace Min/Km") == "avg_pace_minkm"
+        assert _snake_case("Avg-Pace Min/Km") == "avg_pace_min_km"
 
 
 class TestTimeToMinutes:
