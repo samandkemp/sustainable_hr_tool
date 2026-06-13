@@ -13,6 +13,20 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
+Optional: install tools as console scripts
+
+To expose small utilities on your PATH, install the repository in editable mode (from the project root):
+
+```powershell
+python -m pip install -e .
+```
+
+This provides two convenient commands after install:
+- `srht-validate` — runs the validation helper (`tools.validate_and_clean:main`)
+- `srht-predict`  — runs the scenario predictor (`tools.predict_scenario:main`)
+
+Run these tools with the same Python environment where the project dependencies are installed.
+
 Validate data only
 
 Run lightweight validation (no training). This writes `validation_report.json` to the model directory.
@@ -45,6 +59,27 @@ Use synthetic data for quick experiments:
 
 ```powershell
 python -m src.train --synthetic --model-dir scratch_models
+```
+
+Notes on data folders
+- Place raw activity CSVs into `data/raw/`. If you have already sanitised or combined data, place CSVs into `data/processed/` and the training pipeline will prefer those files by default when no `--input` is given.
+- The `--synthetic` option writes a processed CSV to `data/processed/processed_synthetic.csv` and a Garmin-style raw CSV to `data/raw/Activities_synthetic.csv` as a template.
+
+- The synthetic raw CSV is generated to match the columns emitted by your watch export (`data/raw/Activities.csv`) when that file exists; otherwise the included `data/raw/template_Activities.csv` is used as the header template. This helps ensure synthetic data mirrors real exported columns.
+
+Behaviour when no data is present
+
+- The training CLI prefers CSVs in `data/processed/`, falling back to `data/raw/`.
+- If no CSVs are found, the CLI will prompt interactively to generate synthetic data. Use `--auto-synthetic` to generate synthetic data non-interactively.
+
+Examples:
+
+```powershell
+# Interactive prompt if no data found
+python -m src.train --model-dir scratch_models
+
+# Skip prompt and auto-generate synthetic data
+python -m src.train --auto-synthetic --model-dir scratch_models
 ```
 
 Load a saved model and make predictions (example script snippet)

@@ -7,6 +7,7 @@ Usage examples are in the module docstring and the project README.
 
 from pathlib import Path
 import argparse
+import sys
 
 import pandas as pd
 from . import data_loader
@@ -26,18 +27,57 @@ def run_training(
     model_dir: str = "models",
     save_models: bool = True,
     validate_only: bool = False,
+    auto_synthetic: bool = False,
 ):
     # Load data
     if use_synthetic:
-        df = utils.generate_dummy_data()
-    elif input_path is None:
-        raise ValueError("Either `input_path` or `use_synthetic=True` must be provided")
+        # Generate synthetic processed + raw-format files. Processed data is used
+        # by the modelling pipeline; the raw-format CSV is useful as a template
+        # for users to drop into `data/raw/` when collecting real activities.
+        proc_path = Path("data/processed/processed_synthetic.csv")
+        raw_path = Path("data/raw/Activities_synthetic.csv")
+        df_proc, _ = utils.generate_synthetic_and_raw(processed_path=str(proc_path), raw_path=str(raw_path))
+        df = df_proc
     else:
-        p = Path(input_path)
-        if p.is_dir():
-            df = data_loader.load_all_data(str(p))
+        # If the user did not specify input, prefer any processed CSVs under
+        # `data/processed/` so sanitized data is used by default. Fall back to
+        # `data/raw/` if no processed files are present.
+        if input_path is None:
+            proc_folder = Path("data/processed")
+            raw_folder = Path("data/raw")
+            if proc_folder.exists() and any(proc_folder.glob("*.csv")):
+                df = data_loader.load_all_data(str(proc_folder))
+            elif raw_folder.exists() and any(raw_folder.glob("*.csv")):
+                df = data_loader.load_all_data(str(raw_folder))
+            else:
+                # No CSVs found; either auto-generate synthetic data, or prompt the user
+                if auto_synthetic:
+                    proc_path = Path("data/processed/processed_synthetic.csv")
+                    raw_path = Path("data/raw/Activities_synthetic.csv")
+                    df_proc, _ = utils.generate_synthetic_and_raw(processed_path=str(proc_path), raw_path=str(raw_path))
+                    df = df_proc
+                else:
+                    # Interactive prompt when running in a TTY
+                    if sys.stdin is not None and sys.stdin.isatty():
+                        ans = input(
+                            "No CSVs found in data/processed or data/raw. Generate synthetic data now? [y/N]: "
+                        ).strip().lower()
+                        if ans in ("y", "yes"):
+                            proc_path = Path("data/processed/processed_synthetic.csv")
+                            raw_path = Path("data/raw/Activities_synthetic.csv")
+                            df_proc, _ = utils.generate_synthetic_and_raw(processed_path=str(proc_path), raw_path=str(raw_path))
+                            df = df_proc
+                        else:
+                            print("No data available; aborting training.")
+                            return None
+                    else:
+                        raise ValueError("No input provided and no CSVs found in data/processed or data/raw. Re-run with --synthetic or --auto-synthetic to generate synthetic data.")
         else:
-            df = data_loader.load_data(str(p))
+            p = Path(input_path)
+            if p.is_dir():
+                df = data_loader.load_all_data(str(p))
+            else:
+                df = data_loader.load_data(str(p))
 
     # Prepare model dir early so validation artifacts can be saved there
     model_dir_path = Path(model_dir)
@@ -185,6 +225,7 @@ def _cli():
     parser = argparse.ArgumentParser(description="Train baseline sustainable-HR and pace models.")
     parser.add_argument("--input", help="Path to activities CSV file or folder containing CSVs", default=None)
     parser.add_argument("--synthetic", help="Use synthetic data generator instead of real input", action="store_true")
+    parser.add_argument("--auto-synthetic", help="Automatically generate synthetic data if no input CSVs are found", action="store_true")
     parser.add_argument("--model-dir", help="Directory to write models and reports", default="models")
     parser.add_argument("--no-save", help="Do not persist trained models", action="store_true")
     parser.add_argument("--validate-only", help="Only run validation and save a report, do not train", action="store_true")
@@ -196,6 +237,7 @@ def _cli():
         model_dir=args.model_dir,
         save_models=not args.no_save,
         validate_only=args.validate_only,
+        auto_synthetic=args.auto_synthetic,
     )
 
 
