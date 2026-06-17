@@ -2,7 +2,7 @@
 -----------------
 Predict sustainable heart rate, pace, and finish time for standard race distances.
 
-Two complementary prediction directions are supported:
+Two prediction directions are supported:
 
   Forward  — given a pace, predict the HR the model expects at that effort level
              for a given distance.

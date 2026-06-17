@@ -103,6 +103,8 @@ def parse_activities_csv(df: pd.DataFrame) -> pd.DataFrame:
     The returned DataFrame uses snake_case columns and ensures numeric
     `distance_km`, `duration_min`, `avg_pace_min_km`, `avg_hr`, and
     `elevation_gain_m` when possible.
+
+    TO-DO: Check against other garmin CSV formats/Apple Watch data. Currently based on Vivoactive 3 data format.
     """
     df = df.copy()
     # Normalise column names

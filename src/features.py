@@ -36,7 +36,7 @@ def elevation_adjusted_pace(df: pd.DataFrame, elev_col: str = "elevation_gain_m"
 
 
 def fatigue_proxies(df: pd.DataFrame) -> pd.DataFrame:
-    """Add simple proxies for fatigue/stress based on duration and effort.
+    """Add and applies simple proxies for fatigue/stress based on duration and effort.
 
     - `duration_hr`: duration in hours
     - `stress_score`: effort_score * duration_hr (simple multiplicative proxy)
@@ -54,7 +54,7 @@ def rolling_training_load(
     window: int = 7,
     load_col: str = "distance_km",
 ) -> pd.DataFrame:
-    """Add a rolling sum of training load over the previous `window` runs.
+    """Add a rolling sum of training load over the previous runs in the same window.
 
     Requires the DataFrame to be in chronological order (oldest first).
     The resulting column is named `rolling_<window>run_load`.
@@ -80,7 +80,7 @@ def compute_atl_ctl_tsb(
 
     If a date column is present the decay is calendar-aware (days). Otherwise
     it falls back to run-indexed decay (number of runs as the time axis).
-    The load column defaults to ``stress_score`` if present, else ``distance_km``.
+    The load column defaults to ``stress_score`` if present, otherwise ``distance_km`` instead.
     """
     df = df.copy()
 
@@ -107,7 +107,7 @@ def compute_atl_ctl_tsb(
 
 
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Run a sequence of feature engineering steps for modelling."""
+    """Run a sequence of each feature step for modelling."""
     df = df.copy()
     df = add_effort_score(df)
     df = elevation_adjusted_pace(df)

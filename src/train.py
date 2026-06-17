@@ -1,4 +1,4 @@
-"""Training pipeline
+"""Training pipeline for model
 -------------------
 End-to-end pipeline: load → validate → preprocess → feature engineer → train → evaluate → report.
 """
@@ -92,7 +92,7 @@ def run_training(
             print(f"  {key}: {val_report.get(key)}")
         return {"validation_report": val_report, "validation_path": str(validation_report_path)}
 
-    # ── Preprocess & feature engineering ────────────────────────────────────
+    # ── Preprocess & features ────────────────────────────────────
     df_proc = preprocessing.preprocess_data(df, drop_na_columns=["distance_km"])
     df_feat = features.compute_features(df_proc)
 

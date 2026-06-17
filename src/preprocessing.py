@@ -1,9 +1,9 @@
 """preprocessing
 -----------------
-Convenience preprocessing pipeline used by the modelling workflow.
+Preprocessing pipeline for themodelling workflow.
 
-The pipeline is intentionally small and explicit so it is easy to
-extend during iterative development when real Garmin data is available.
+The intent is to keep preprocessing small and well-defined so that outputs
+are consistent, enabling feature engineering/modelling to be developed separately.
 
 Functions
 - `preprocess_data` : orchestrates basic cleaning, type coercion, and
@@ -17,7 +17,7 @@ import numpy as np
 def compute_pace(df: pd.DataFrame) -> pd.DataFrame:
     """Ensure pace-related columns exist: `avg_pace_min_km` and `duration_min`.
 
-    If one is missing it will be computed from the other when possible.
+    If one is missing it will be computed from the other if/when possible.
     """
     df = df.copy()
     if "duration_min" in df.columns and "distance_km" in df.columns:

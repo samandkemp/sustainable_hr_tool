@@ -1,5 +1,5 @@
 """
-This module computes visualisations to understand model performance
+This module computes visualisations to understand model outputs
 
 """
 

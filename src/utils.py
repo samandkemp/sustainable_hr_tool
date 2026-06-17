@@ -1,5 +1,7 @@
 """
-Utility functions: synthetic data generation and DataFrame inspection.
+Utility functions: 
+- synthetic data generation
+- DataFrame inspection.
 """
 
 from pathlib import Path
@@ -65,7 +67,7 @@ def generate_synthetic_and_raw(
 ):
     """Generate synthetic processed data and a Garmin-style raw CSV template.
 
-    The processed CSV follows the canonical columns used by the pipeline
+    The processed CSV follows the columns used by the pipeline
     (distance_km, duration_min, avg_pace_min_km, avg_hr, etc.). A parallel
     raw-format CSV is written using common Garmin headers so the project can
     accept a dropped CSV in `data/raw/`.

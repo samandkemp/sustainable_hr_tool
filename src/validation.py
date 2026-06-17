@@ -1,12 +1,12 @@
 """validation
 ----------------
-Simple data validation and minimal PII removal utilities.
+Data validation and minimal redundant column removal utilities 
+(locations/privacy).
 
 The functions are intentionally lightweight: they check for required
-columns, basic type coercion, and produce a small report that can be
-written to disk. PII removal drops common descriptive columns but does
-not attempt aggressive anonymisation since the data will be used by
-its owners.
+columns, basic type coercion, and produce a small disk-written report. 
+PII removal drops common descriptive columns but does not attempt aggressive 
+anonymisation since the data is expected to be used by data owners.
 """
 
 import pandas as pd
