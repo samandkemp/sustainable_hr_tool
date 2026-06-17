@@ -10,7 +10,8 @@ Functions
   optional normalization and duration/pacing computations.
 """
 
-from . import pd, np
+import pandas as pd
+import numpy as np
 
 
 def compute_pace(df: pd.DataFrame) -> pd.DataFrame:
@@ -27,7 +28,7 @@ def compute_pace(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalize_columns(df: pd.DataFrame, columns: list) -> pd.DataFrame:
-    """Add z-score normalized versions for requested numeric columns.
+    """Add z-score normalised versions for requested numeric columns.
 
     New columns are suffixed with `_norm`.
     """
@@ -55,7 +56,7 @@ def preprocess_data(
     drop_na_columns : list, optional
         Columns to require (rows missing these are dropped).
     normalize : list, optional
-        Numeric columns to z-normalize.
+        Numeric columns to z-normalise.
     compute_features : bool, default True
         Whether to compute basic derived features like pace/duration.
 
@@ -68,7 +69,7 @@ def preprocess_data(
 
     # Basic cleaning
     if drop_na_columns:
-        df.dropna(subset=drop_na_columns, inplace=True)
+        df = df.dropna(subset=drop_na_columns)
 
     # Feature computations
     if compute_features:

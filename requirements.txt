@@ -4,5 +4,17 @@ seaborn
 matplotlib
 scikit-learn
 joblib
+streamlit
+plotly
+
+# Notebook
 jupyter
 ipykernel
+
+# Packaging helpers
+setuptools
+wheel
+pyyaml
+
+# Testing
+pytest

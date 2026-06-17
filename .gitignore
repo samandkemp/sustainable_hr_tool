@@ -25,13 +25,13 @@ ENV/
 *.ipynb_meta.json
 
 # === Data Files ===
-data/*.csv
-data/*.xlsx
-data/*.txt
-data/*.json
+# Raw user data exports — do not commit personal activity files
+data/raw/
+!data/raw/README.md
 
-# (keep one example data file if you want)
-!data/README.md
+# Processed and generated CSVs (pipeline outputs)
+data/processed/
+!data/processed/README.md
 
 # === Logs and temporary files ===
 *.log
@@ -62,6 +62,10 @@ build/
 models/
 *.joblib
 *.pkl
+
+# Scratch / temporary output directories
+scratch_models/
+results/
 
 # Environment files
 .env

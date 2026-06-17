@@ -1,30 +1,31 @@
+"""Package initialisation for the sustainable_hr_tool project.
+
+Heavy modules (train, modelling) are intentionally excluded here to keep
+package import lightweight. Import them explicitly where needed.
 """
-This module imports common packages across modules
 
-"""
-
-# Core external libraries
-import os
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# Internal module imports for convenience
 from . import (
     utils,
     data_loader,
     preprocessing,
-    modelling,
     evaluation,
     evaluation_visuals,
-    visualise
+    visualise,
+    features,
+    targets,
+    validation,
+    race_predictor,
 )
 
 __all__ = [
-    # External packages
-    "os", "np", "pd", "sns", "plt",
-    # Internal modules
-    "utils", "data_loader", "preprocessing",
-    "modelling", "evaluation", "evaluation_visuals", "visualise"
+    "utils",
+    "data_loader",
+    "preprocessing",
+    "evaluation",
+    "evaluation_visuals",
+    "visualise",
+    "features",
+    "targets",
+    "validation",
+    "race_predictor",
 ]

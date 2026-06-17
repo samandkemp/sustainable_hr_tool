@@ -2,14 +2,35 @@
 This module will manage model training using featured computations
 
 """
-from . import pd, np
-from sklearn.linear_model import LinearRegression
+import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 from pathlib import Path
 from typing import Union
 from . import features as feat
+
+
+def get_estimator(model_type: str = "linear"):
+    """Return a fresh sklearn estimator for the given model type.
+
+    Supported types: ``"linear"``, ``"ridge"``, ``"random_forest"``,
+    ``"gradient_boosting"``.
+    """
+    from sklearn.linear_model import LinearRegression, Ridge
+    from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+
+    options = {
+        "linear": LinearRegression(),
+        "ridge": Ridge(alpha=1.0),
+        "random_forest": RandomForestRegressor(n_estimators=100, random_state=42),
+        "gradient_boosting": GradientBoostingRegressor(n_estimators=100, random_state=42),
+    }
+    if model_type not in options:
+        raise ValueError(
+            f"Unknown model_type '{model_type}'. Choose from: {list(options)}"
+        )
+    return options[model_type]
 
 # ---------------------------
 # Train Model
@@ -32,6 +53,7 @@ def fit_sustainable_hr_model(
     features: list = None,
     target: str = "avg_hr",
     model_file: Union[str, None] = None,
+    model_type: str = "linear",
 ) -> tuple:
     """Train a baseline linear model to predict sustainable HR.
 
@@ -52,9 +74,9 @@ def fit_sustainable_hr_model(
     X = df[features]
     y = df[target]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = LinearRegression()
+    model = get_estimator(model_type)
     model.fit(X_train, y_train)
 
     # Predict for the full dataset and attach predictions
@@ -96,6 +118,7 @@ def fit_pace_from_hr_model(
     features: list = None,
     target: str = "avg_pace_min_km",
     model_file: Union[str, None] = None,
+    model_type: str = "linear",
 ) -> tuple:
     """Train a baseline model that predicts pace from HR and other covariates.
 
@@ -114,9 +137,9 @@ def fit_pace_from_hr_model(
     X = df[features]
     y = df[target]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = LinearRegression()
+    model = get_estimator(model_type)
     model.fit(X_train, y_train)
 
     df["predicted_pace_min_km"] = model.predict(X)
@@ -126,7 +149,3 @@ def fit_pace_from_hr_model(
         joblib.dump(model, model_file)
 
     return model, df
-
-
-    
-    

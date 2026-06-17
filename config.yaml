@@ -2,10 +2,10 @@
 # Paths
 # ---------------------------
 paths:
-  data_folder: "data"                    # Folder where CSVs are stored
-  dummy_data_file: "data/dummy_running_data.csv"
-  model_file: "models/sustainable_hr_model.pkl"
-  results_folder: "results"              # Optional folder to save outputs
+  raw_data_folder: "data/raw"
+  processed_data_folder: "data/processed"
+  model_dir: "models"
+  results_folder: "results"
 
 # ---------------------------
 # Data Generation / Dummy Data
@@ -19,36 +19,59 @@ dummy_data:
 # ---------------------------
 preprocessing:
   drop_na_columns:
-    - avg_hr
     - distance_km
-    - effort_score
   normalize_columns:
     - distance_km
+    - avg_pace_min_km
     - effort_score
+
+# ---------------------------
+# Feature Engineering
+# ---------------------------
+features:
+  rolling_load_window: 7        # Number of recent runs for cumulative load
+  atl_halflife_days: 7          # Acute Training Load half-life (fatigue)
+  ctl_halflife_days: 42         # Chronic Training Load half-life (fitness)
 
 # ---------------------------
 # Modelling
 # ---------------------------
 modelling:
-  features:
-    - distance_km_norm
-    - effort_score_norm
-  target: avg_hr
-  model_type: linear_regression
+  target_hr: avg_hr
+  target_pace: avg_pace_min_km
+  model_type: gradient_boosting   # model used for final training and dashboard
+  compare_models:                 # models compared during the CV step
+    - linear
+    - ridge
+    - random_forest
+    - gradient_boosting
+  test_size: 0.2
+  random_state: 42
 
 # ---------------------------
 # Evaluation
 # ---------------------------
 evaluation:
+  cv_folds: 5
   metrics:
     - MAE
     - RMSE
     - R2
 
 # ---------------------------
+# Race Prediction
+# ---------------------------
+race_prediction:
+  distances_km:
+    5k: 5.0
+    10k: 10.0
+    half_marathon: 21.097
+    marathon: 42.195
+
+# ---------------------------
 # Visualization
 # ---------------------------
 visualization:
-  show_plots: True
-  save_plots: False
+  show_plots: false
+  save_plots: true
   figsize: [7, 4]
